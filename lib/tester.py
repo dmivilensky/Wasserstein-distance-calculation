@@ -29,7 +29,7 @@ def sample_img_batch(n, max_int=10):
     C = np.zeros((n ** 2, n ** 2))
     for i in range(n ** 2):
         for j in range(n ** 2):
-            C[i, j] = norm(np.array([i // n, i % n]) - np.array([j // n, j % n]), 2)
+            C[i, j] = np.linalg.norm(np.array([i // n, i % n]) - np.array([j // n, j % n]), 2)
     p = img1.reshape((n ** 2, )) / np.sum(img1)
     q = img2.reshape((n ** 2, )) / np.sum(img2)
     return C, p, q
