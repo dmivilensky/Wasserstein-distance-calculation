@@ -2,6 +2,7 @@ import numpy as np
 import math
 from PIL import Image
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 class Experiments:
     @staticmethod
@@ -24,6 +25,9 @@ class Experiments:
             for j in range(img1.shape[0] * img1.shape[1]):
                 C[i, j] = np.linalg.norm(np.array([i // img1.shape[0], i % img1.shape[1]]) - np.array([j // img1.shape[0], j % img1.shape[1]]), 2)
 
+        img1 += 1
+        img2 += 1
+        
         p = img1.reshape((img1.shape[0] * img1.shape[1], )) / np.sum(img1)
         q = img2.reshape((img2.shape[0] * img2.shape[1], )) / np.sum(img2)
 
@@ -47,10 +51,12 @@ class Experiments:
 
         iterations = [[] for i in range(len(methods))]
 
-        for eps in epsilons:
-            for gamma in gammas:
-                for i in range(len(methods)):
-                    x, iterations_num, _ = methods[i](C, p, q, gamma, eps)
-                    iterations[i].append(iterations_num)
+        with tqdm(total=len(epsilons) * len(gammas) * len(methods)) as ph:
+            for eps in epsilons:
+                for gamma in gammas:
+                    for i in range(len(methods)):
+                        x, iterations_num, _ = methods[i](C, p, q, gamma, eps)
+                        iterations[i].append(iterations_num)
+                        ph.update(1)
             
         return epsilons, gammas, np.array(iterations).reshape((len(epsilons), len(methods), len(gammas)))
