@@ -10,14 +10,14 @@ class SinkhornMethod:
         """
         
         # dual func variables for indicator functions
-        self.lambda_ = np.ones(n)
-        self.my = np.ones(n)
+        # self.lambda_ = np.zeros(n)
+        self.lambda_ = np.zeros(n)
+        self.my = np.zeros(n)
         
         # constants
         self.gamma = gamma
         self.n = n
         self.epsilon = epsilon
-        self.epsilon_ = round(epsilon / np.sqrt(np.linalg.norm(self.lambda_, 2) ** 2 + np.linalg.norm(self.my, 2) ** 2), 4)
         self.epsilon_prox = epsilon_prox
         
         self.log = log
@@ -26,7 +26,6 @@ class SinkhornMethod:
             print("Algorithm configuration:")
             print("gamma = " + str(gamma))
             print("eps = " + str(epsilon))
-            print("eps with ~ = " + str(self.epsilon_))
             print("eps prox = " + str(self.epsilon_prox))
             print("–––––––––––––––––––––––––––––\n")
     
@@ -35,10 +34,10 @@ class SinkhornMethod:
         Calculates Lagrange equation variables
         """
         for i in range(self.n):
-            self.lambda_[i] = self.gamma * np.log(1/(p[i] + 1e-6) * np.sum([xk[i, j] * np.exp(-(self.gamma + C[i, j] + self.my[j])/self.gamma) for j in range(self.n)]) + 1e-5)
+            self.lambda_[i] = self.gamma * np.log(1/p[i] * np.sum([xk[i, j] * np.exp(-(self.gamma + C[i, j] + self.my[j])/self.gamma) for j in range(self.n)]))
         
         for j in range(self.n):
-            self.my[j] = self.gamma * np.log(1/(q[j] + 1e-6) * np.sum([xk[i, j] * np.exp(-(self.gamma + C[i, j] + self.lambda_[i])/self.gamma) for i in range(self.n)]) + 1e-5)
+            self.my[j] = self.gamma * np.log(1/q[j] * np.sum([xk[i, j] * np.exp(-(self.gamma + C[i, j] + self.lambda_[i])/self.gamma) for i in range(self.n)]))
     
     def _new_x(self, C, p, q, xk):
         x = np.zeros((self.n, self.n))
@@ -60,12 +59,12 @@ class SinkhornMethod:
     def _new_f(self, C, x, xk):
         return np.sum(C * x) + self.gamma * np.sum(x * np.log(x / xk))
     
-    def fit(self, C, p, q):
+    def fit(self, C, p, q, with_prox=True):
         T = 0
         k = 0
         x = 1/self.n**2 * np.ones((self.n, self.n))
         while True:
-            xk = x.copy()
+            xk = x.copy() / np.sum(x)
             
             t = 0
             while True:
@@ -74,19 +73,27 @@ class SinkhornMethod:
                      
                 t += 1  
                 T += 1
-                if T % 20 == 0:
-                    self.phi = self._new_phi(C, p, q, xk)
-                    self.f = self._new_f(C, x, xk)                 
-                    self.epsilon_ = round(self.epsilon / np.sqrt(np.linalg.norm(self.lambda_, 2) ** 2 + np.linalg.norm(self.my, 2) ** 2), 4)
-                    if self.log:
-                        print("Inner iteration " + str(t) + ":", "metric (one) = " + str(round((((p - x.sum(1))**2).sum() + ((q - x.sum(0))**2).sum())**(1/2), 4)), "> " + str(self.epsilon), "or metric (two) = " + str(round(self.f - self.phi, 4)), "> " + str(self.epsilon_))
-                    if (((p - x.sum(1))**2).sum() + ((q - x.sum(0))**2).sum())**(1/2) < self.epsilon and self.f - self.phi < self.epsilon_:
-                        if self.log:
-                            print("Inner iteration " + str(t) + ":", "metric (one) = " + str(round((((p - x.sum(1))**2).sum() + ((q - x.sum(0))**2).sum())**(1/2), 4)), "< " + str(self.epsilon), "and metric (two) = " + str(round(self.f - self.phi, 4)), "< " + str(self.epsilon_))
-                        break
                 
+                self.phi = self._new_phi(C, p, q, xk)
+                self.f = self._new_f(C, x, xk) 
+                    
+                c = 1 / (2 * self.n) * (np.sum(self.my) - np.sum(self.lambda_))
+                self.lambda_ += c
+                self.my -= c
+                
+                self.epsilon_ = self.epsilon / np.sqrt(np.linalg.norm(self.lambda_, 2) ** 2 + np.linalg.norm(self.my, 2) ** 2)
+                if self.log:
+                    print("Inner iteration " + str(t) + ":", "metric (one) = " + str(round((((p - x.sum(1))**2).sum() + ((q - x.sum(0))**2).sum())**(1/2), 6)), "> " + str(self.epsilon_), "or metric (two) = " + str(round(self.f - self.phi, 6)), "> " + str(self.epsilon))
+                    
+                if (((p - x.sum(1))**2).sum() + ((q - x.sum(0))**2).sum())**(1/2) < self.epsilon_ and self.f - self.phi < self.epsilon:
+                    if self.log:
+                        print("Inner iteration " + str(t) + ":", "metric (one) = " + str(round((((p - x.sum(1))**2).sum() + ((q - x.sum(0))**2).sum())**(1/2), 6)), "< " + str(self.epsilon_), "and metric (two) = " + str(round(self.f - self.phi, 6)), "< " + str(self.epsilon))
+                    break
+                
+            if not with_prox:
+                return x, T, k
             
-            if self.log and k % 1 == 0:
+            if self.log:
                 print("– Outer iteration " + str(k) + ":", "metric = " + str(round(np.linalg.norm(x - xk, 2), 4)), "> " + str(self.epsilon_prox))
             
             k += 1
