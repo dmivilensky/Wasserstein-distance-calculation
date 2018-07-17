@@ -60,3 +60,27 @@ class Experiments:
                         ph.update(1)
             
         return epsilons, gammas, np.array(iterations).reshape((len(epsilons), len(methods), len(gammas)))
+    
+    @staticmethod
+    def plot_algorithm_comparition(gammas, iterations, epsilon, n):
+        gamma_optimal = epsilon / (4 * np.log(n))
+
+        gamma_plots_intersection = 0
+        for i in range(1, iterations[0].shape[1]):
+            if iterations[0][0][i-1] >= iterations[0][1][i-1] and iterations[0][0][i] <= iterations[0][1][i]:
+                gamma_plots_intersection = 7/8 * gammas[i-1] + 1/8 * gammas[i]
+
+        plt.figure(figsize=(8, 5))
+        plt.title("$N(\epsilon, \gamma)$, $\epsilon = $ %.2f" % epsilon)
+        plt.xlabel("$\gamma$", fontsize=14)
+        plt.ylabel("$N(\gamma)$", fontsize=14)
+
+        for i in range(iterations[0].shape[0]):
+            plt.plot(gammas, iterations[0][i])
+
+        plt.plot([gamma_plots_intersection, gamma_plots_intersection], [0, np.max(iterations[0])], 'g:')
+        plt.plot([gamma_optimal, gamma_optimal], [0, np.max(iterations[0])], 'r:')
+
+        plt.legend(["Fast Gradient Method", "Sinkhorn Method", 
+                    "intersection $\gamma = %0.2f$" % gamma_plots_intersection, 
+                    "$\gamma^* = %.1e$" % gamma_optimal])
