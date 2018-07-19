@@ -79,8 +79,12 @@ class Experiments:
         for i in range(iterations[0].shape[0]):
             plt.plot(gammas, iterations[0][i])
 
-        plt.plot([gamma_plots_intersection, gamma_plots_intersection], [0, np.max(iterations[0])], 'g:')
+        if gamma_plots_intersection != 0:
+            plt.plot([gamma_plots_intersection, gamma_plots_intersection], [0, np.max(iterations[0])], 'g:')
         plt.plot([gamma_optimal, gamma_optimal], [0, np.max(iterations[0])], 'r:')
 
-        plt.legend(methods_names + ["intersection $\gamma = %0.2f$" % gamma_plots_intersection, 
-                                    "$\gamma^* = %.1e$" % gamma_optimal])
+        if gamma_plots_intersection != 0:
+            plt.legend(methods_names + ["intersection $\gamma = %s$" % str(gamma_plots_intersection), 
+                                        "$\gamma^* = %.1e$" % gamma_optimal])
+        else:
+            plt.legend(methods_names + ["$\gamma^* = %.1e$" % gamma_optimal])
