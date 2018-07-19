@@ -1,7 +1,7 @@
 import numpy as np
 
 class NesterovsLinearCoupling:
-    def __init__(self, gamma, epsilon, n):
+    def __init__(self, gamma, epsilon, n, log=False):
         self.gamma = gamma
         self.epsilon = epsilon
         self.n = n
@@ -13,6 +13,14 @@ class NesterovsLinearCoupling:
         self.x_sum = 0
         
         self.x_0 = 1 / n**2
+        
+        self.log = log
+        if self.log:
+            print("–––––––––––––––––––––––––––––")
+            print("Algorithm configuration:")
+            print("gamma = " + str(gamma))
+            print("eps = " + str(epsilon))
+            print("–––––––––––––––––––––––––––––\n")
     
     def f(self, x):
         return (self.c * x).sum() + self.gamma * (x * np.log(x / self.x_0)).sum()
@@ -20,7 +28,7 @@ class NesterovsLinearCoupling:
     def phi(self, lambda_x, mu_x):
         return (lambda_x * self.p).sum() + (mu_x * self.q).sum() + \
                 self.gamma * np.log(1/np.e * (self.x_0 * np.exp(
-                    -(self.gamma + self.c + lambda_x.repeat(n).reshape(-1, n) + mu_x.repeat(n).reshape(-1, n).T) / self.gamma
+                    -(self.gamma + self.c + lambda_x.repeat(self.n).reshape(-1, self.n) + mu_x.repeat(self.n).reshape(-1, self.n).T) / self.gamma
                 )).sum())
         
     def argmin(self, func, epsilon, var_range):
@@ -46,7 +54,7 @@ class NesterovsLinearCoupling:
     
     def x_hat(self, lambda_x, mu_x):
         x_hat = self.x_0 * np.exp(
-            -(self.gamma + self.c + lambda_x.repeat(n).reshape(-1, n) + mu_x.repeat(n).reshape(-1, n).T) / self.gamma
+            -(self.gamma + self.c + lambda_x.repeat(self.n).reshape(-1, self.n) + mu_x.repeat(self.n).reshape(-1, self.n).T) / self.gamma
         )
         return x_hat / x_hat.sum()
     
@@ -68,8 +76,8 @@ class NesterovsLinearCoupling:
         
     def grad_phi(self, lambda_y, mu_y):
         return np.array([
-            p - self.x_hat(lambda_y, mu_y).sum(1), 
-            q - self.x_hat(lambda_y, mu_y).sum(0)
+            self.p - self.x_hat(lambda_y, mu_y).sum(1), 
+            self.q - self.x_hat(lambda_y, mu_y).sum(0)
         ])
     
     def _new_h(self, L=None):
@@ -85,12 +93,12 @@ class NesterovsLinearCoupling:
                self.mu_y     - self.h * self.grad_phi(self.lambda_y, self.mu_y)[1]
     
     def correct_lambda_mu(self):
-        c = (np.linalg.norm(self.mu_x, 1) - np.linalg.norm(self.lambda_x, 1)) * 1/(2*n)
+        c = (np.linalg.norm(self.mu_x, 1) - np.linalg.norm(self.lambda_x, 1)) * 1/(2*self.n)
         self.lambda_x += c
         self.mu_x -= c
     
     def deviation_p_q(self, x):
-        return np.sqrt(np.sum((x.sum(1) - p)**2) + np.sum((x.sum(0) - q)**2))
+        return np.sqrt(np.sum((x.sum(1) - self.p)**2) + np.sum((x.sum(0) - self.q)**2))
     
     def _new_alpha(self, k=None, L=None):
         if k is not None and L is not None:
@@ -109,7 +117,7 @@ class NesterovsLinearCoupling:
     def x_sum_update(self):
         self.x_sum += self.alpha * self.x_hat(self.lambda_y, self.mu_y)
         
-    def _new_x_wave(self):
+    def x_wave_(self):
         return self.x_sum * 1/self.A
     
     def fit(self, c, p, q):
@@ -119,19 +127,22 @@ class NesterovsLinearCoupling:
         while True:
             self.x_update()
             
-            self.beta = self._new_beta(k = k)
+            # self.beta = self._new_beta(k = k)
+            self.beta = self._new_beta()
             self.lambda_y, self.mu_y = self._new_y()
             
-            self.h = self._new_h(L = 1/self.gamma)
+            # self.h = self._new_h(L = 1/self.gamma)
+            self.h = self._new_h()
             self.lambda_x_new, self.mu_x_new = self._new_x()
             self.correct_lambda_mu()
             
-            self.alpha = self._new_alpha(k = k, L = 1/self.gamma)
+            # self.alpha = self._new_alpha(k = k, L = 1/self.gamma)
+            self.alpha = self._new_alpha()
             self.x_sum_update()
             self.lambda_u, self.mu_u = self._new_u()
             
             self.A = self._new_A()
-            self.x_wave = self._new_x_wave()
+            self.x_wave = self.x_wave_()
             
             R = np.sqrt(np.linalg.norm(self.lambda_x) + np.linalg.norm(self.mu_x))
             epsilon_wave = self.epsilon / R
@@ -139,7 +150,7 @@ class NesterovsLinearCoupling:
             criteria_a = self.deviation_p_q(self.x_wave) < epsilon_wave
             criteria_b = self.f(self.x_wave) + self.phi(self.lambda_x_new, self.mu_x_new) < self.epsilon
             
-            if k % 25 == 0:
+            if self.log and k % 25 == 0:
                 print(f'iteration {k}:   criteria 1 = {round(self.deviation_p_q(self.x_wave), 7)}, ' + \
                                      f'criteria 2 = {round(self.f(self.x_wave) + self.phi(self.lambda_x_new, self.mu_x_new), 7)}')
             
