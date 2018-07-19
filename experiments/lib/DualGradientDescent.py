@@ -11,10 +11,6 @@ class DualGradientDescent:
         self.x_sum  = 0
         self.x_0    = np.ones([n, n]) / (n**2)
     
-        
-        p = np.random.dirichlet(np.ones(n), size=1).ravel()
-        q = np.random.dirichlet(np.ones(n), size=1).ravel()
-        
     def f(self, x):
         return (self.c * x).sum() + self.gamma * (x * np.log(x / self.x_0)).sum()
     
