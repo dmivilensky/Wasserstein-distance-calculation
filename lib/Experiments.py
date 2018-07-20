@@ -50,8 +50,9 @@ class Experiments:
         plt.imshow(x.reshape(int(math.sqrt(n)), int(math.sqrt(n)), n).sum(2))
     
     @staticmethod
-    def test(problems, config=None, methods=[]):
+    def test(problems, config=None, methods=None):
         config = config or {'eps': (0.01, 0.01, 1), 'gamma': (10, 0.01, 2)}
+        methods = methods or []
         epsilons = [config['eps'][0] / config['eps'][2]**i for i in range(int(math.log(config['eps'][0] / config['eps'][1], config['eps'][2] + 1e-5)) + 1)]
         gammas = [config['gamma'][0] / config['gamma'][2]**i for i in range(int(math.log(config['gamma'][0] / config['gamma'][1], config['gamma'][2] + 1e-5)) + 1)]
 
