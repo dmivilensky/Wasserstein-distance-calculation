@@ -61,7 +61,7 @@ class Experiments:
                 for eps in epsilons:
                     for gamma in gammas:
                         for i in range(len(methods)):
-                            x, iterations_num, _ = methods[i](C, p, q, gamma, eps)
+                            _, iterations_num, _ = methods[i](C, p, q, gamma, eps)
                             iterations[i].append(iterations_num)
                             ph.update(1)
             

@@ -41,9 +41,7 @@ class SinkhornMethod:
         return xk * np.exp(-(self.gamma + C + np.tile(self.lambda_, (self.n, 1)).T + np.tile(self.my, (self.n, 1)))/self.gamma)
     
     def _new_phi(self, C, p, q, xk):
-        a_min = np.min(C + np.tile(self.lambda_, (self.n, 1)).T + np.tile(self.my, (self.n, 1)) + self.gamma)
         exp_ = -(C + np.tile(self.lambda_, (self.n, 1)).T + np.tile(self.my, (self.n, 1)) + self.gamma ) / self.gamma
-#         exp_[exp_ < -100] = -100
         return - np.sum(self.lambda_ * p) - np.sum(self.my * q) - self.gamma * np.sum(xk * np.exp(exp_))
     
     def _new_f(self, C, x, xk):
