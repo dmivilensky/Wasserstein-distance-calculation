@@ -1,4 +1,7 @@
 # Monge-Kantorovich distance calculation | Sirius 2018.VII
+
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/55b2d20bba974390b40d36eb9d13c01d)](https://app.codacy.com/app/dmivilensky/Wasserstein-distance-calculation?utm_source=github.com&utm_medium=referral&utm_content=dmivilensky/Wasserstein-distance-calculation&utm_campaign=badger)
+
 Optimal Transport and Optimization related experiments.
 
 ## Experiments:
