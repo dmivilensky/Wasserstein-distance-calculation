@@ -24,13 +24,15 @@ class NesterovsLinearCoupling:
             print("–––––––––––––––––––––––––––––\n")
     
     def f(self, x):
-        return (self.c * x).sum() + self.gamma * (x * np.log(x / self.x_0 if np.all(x / self.x_0 > 0) else 1e-16)).sum()
+        return (self.c * x).sum() + self.gamma * ((x + 1e-16) * np.log((x + 1e-16) / self.x_0)).sum()
     
     def phi(self, lambda_x, mu_x):
         a = np.min(self.gamma + self.c + lambda_x.repeat(self.n).reshape(-1, self.n) + mu_x.repeat(self.n).reshape(-1, self.n).T)
+        l = -((self.gamma + self.c + lambda_x.repeat(self.n).reshape(-1, self.n) + mu_x.repeat(self.n).reshape(-1, self.n).T) - a) / self.gamma
+        l[l < -100] = float("-inf")
         return (lambda_x * self.p).sum() + (mu_x * self.q).sum() + \
                 self.gamma * (-a + np.log(1/np.e * (self.x_0 * np.exp(
-                    -((self.gamma + self.c + lambda_x.repeat(self.n).reshape(-1, self.n) + mu_x.repeat(self.n).reshape(-1, self.n).T) - a) / self.gamma
+                    l
                 )).sum()))
         
     def argmin(self, func, epsilon, var_range):
@@ -55,8 +57,11 @@ class NesterovsLinearCoupling:
         return r
     
     def x_hat(self, lambda_x, mu_x):
+        a = np.min(self.gamma + self.c + lambda_x.repeat(self.n).reshape(-1, self.n) + mu_x.repeat(self.n).reshape(-1, self.n).T)
+        l = -(self.gamma + self.c + lambda_x.repeat(self.n).reshape(-1, self.n) + mu_x.repeat(self.n).reshape(-1, self.n).T - a) / self.gamma
+        l[l < -100] = float("-inf")
         x_hat = self.x_0 * np.exp(
-            -(self.gamma + self.c + lambda_x.repeat(self.n).reshape(-1, self.n) + mu_x.repeat(self.n).reshape(-1, self.n).T) / self.gamma
+            l
         )
         return x_hat / x_hat.sum()
     
@@ -100,20 +105,14 @@ class NesterovsLinearCoupling:
         self.mu_x -= c
     
     def deviation_p_q(self, x):
-        try:
-            return np.sqrt(np.sum((x.sum(1) - self.p)**2) + np.sum((x.sum(0) - self.q)**2))
-        except:
-            return 0.0
+        return np.sqrt(np.sum((x.sum(1) - self.p)**2) + np.sum((x.sum(0) - self.q)**2))
     
     def _new_alpha(self, k=None, L=None):
         if k is not None and L is not None:
             return (k + 2) / (2 * L)
         delta_phi = self.phi(self.lambda_y, self.mu_y) - self.phi(self.lambda_x, self.mu_x)
-        try:
-            D = max(delta_phi * (delta_phi - 2 * self.A * self.deviation_p_q(self.x_hat(self.lambda_y, self.mu_y))**2), 0)
-            return (-delta_phi + np.sqrt(D)) / self.deviation_p_q(self.x_hat(self.lambda_y, self.mu_y))**2
-        except:
-            print(delta_phi * (delta_phi - 2 * self.A * self.deviation_p_q(self.x_hat(self.lambda_y, self.mu_y))**2))
+        D = max(delta_phi * (delta_phi - 2 * self.A * self.deviation_p_q(self.x_hat(self.lambda_y, self.mu_y))**2), 0)
+        return (-delta_phi + np.sqrt(D)) / self.deviation_p_q(self.x_hat(self.lambda_y, self.mu_y))**2
     
     def _new_u(self):
         return self.lambda_u - self.alpha * self.grad_phi(self.lambda_y, self.mu_y)[0], \

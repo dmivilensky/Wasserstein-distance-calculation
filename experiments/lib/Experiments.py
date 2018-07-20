@@ -1,8 +1,13 @@
+import scipy.stats as stats
+import seaborn as sns
+import pandas as pd
+
 import numpy as np
 import math
 from PIL import Image
 import matplotlib.pyplot as plt
 from tqdm import tqdm
+
 
 class Experiments:
     @staticmethod
@@ -63,28 +68,44 @@ class Experiments:
         return epsilons, gammas, np.array(iterations).reshape((len(epsilons), len(methods), len(problems), len(gammas)))
     
     @staticmethod
-    def plot_algorithm_comparation(gammas, iterations, epsilon, n, methods_names):
-        gamma_optimal = epsilon / (4 * np.log(n))
-
-        gamma_plots_intersection = 0
-        for i in range(1, iterations[0].shape[1]):
-            if iterations[0][0][i-1] >= iterations[0][1][i-1] and iterations[0][0][i] <= iterations[0][1][i]:
-                gamma_plots_intersection = 7/8 * gammas[i-1] + 1/8 * gammas[i]
-
-        plt.figure(figsize=(8, 5))
-        plt.title("$N(\epsilon, \gamma)$, $\epsilon = $ %.2f" % epsilon)
-        plt.xlabel("$\gamma$", fontsize=14)
-        plt.ylabel("$N(\gamma)$", fontsize=14)
-
-        for i in range(iterations[0].shape[0]):
-            plt.plot(gammas, iterations[0][i])
-
-        if gamma_plots_intersection != 0:
-            plt.plot([gamma_plots_intersection, gamma_plots_intersection], [0, np.max(iterations[0])], 'g:')
-        plt.plot([gamma_optimal, gamma_optimal], [0, np.max(iterations[0])], 'r:')
-
-        if gamma_plots_intersection != 0:
-            plt.legend(methods_names + ["intersection $\gamma = %s$" % str(gamma_plots_intersection), 
-                                        "$\gamma^* = %.1e$" % gamma_optimal])
-        else:
-            plt.legend(methods_names + ["$\gamma^* = %.1e$" % gamma_optimal])
+    def plot_algorithm_comparation(gammas, iterations, epsilon, n, methods_names=[]):
+        iters = iterations[0,:,0,:].reshape(1,-1).T[:15]
+        epss = gammas
+        n_methods = len(methods_names)
+        
+        df = pd.DataFrame()
+        df.insert(0, "gamma", epss.tolist() * 3)
+        df.insert(1, "N", iters)
+        df.insert(0, "methods", list(sum([[name] * len(epss) for i, name in enumerate(methods_names)], [])))
+        
+        sns.set(style="ticks")
+        lm = sns.lineplot(x="gamma", y="N", hue="methods",
+                        data=df)
+        lm.set(ylim=(0, 400), 
+               xlabel='$\gamma$', ylabel='$N(\epsilon, \gamma)$', 
+               title="$N(\epsilon, \gamma), \epsilon = %.2f$" % (epsilon))
+       
+    @staticmethod
+    def plot_algorithm_log_comparation(gamma, iterations, epsilons, n, methods_names=[]):
+        iters = np.log(iterations[:,:,0,0].reshape(1,-1).T)
+        epss = np.log(1/epsilons)
+        n_methods = len(methods_names)
+        
+        slope = [stats.linregress(epss, iters[len(epss)*i:len(epss)*(i+1)].reshape(len(epss)))[0] for i in range(n_methods)]
+        
+        df = pd.DataFrame()
+        df.insert(0, "log(1/eps)", epss.tolist() * n_methods)
+        df.insert(1, "log(N)", iters)
+        df.insert(0, "methods", list(sum([[name + ", $ϰ_%i = %.2f$" % (i+1, slope[i])] * len(epss) for i, name in enumerate(methods_names)], [])))
+        
+        sns.set(style="ticks")
+        lm = sns.lmplot(x="log(1/eps)", y="log(N)", hue="methods",
+                        data=df, legend=False,
+                        size=8, aspect=(1+np.sqrt(5))/2)
+        lm.set(ylim=(None, 5), 
+               xlabel='$log(1 / \epsilon)$', ylabel='$log\;N(\epsilon, \gamma)$', 
+               title="$log\;N(\epsilon, \gamma), \gamma = %.2f$" % (gamma))
+        lm.ax.legend(bbox_to_anchor=(0.3, 1, 0., .0), loc=0,
+                     ncol=1, borderaxespad=0.)
+        
+    

@@ -33,31 +33,54 @@ class SinkhornMethod:
         """
         Calculates Lagrange equation variables
         """
-        for i in range(self.n):
-            self.lambda_[i] = self.gamma * np.log(1/p[i] * np.sum([xk[i, j] * np.exp(-(self.gamma + C[i, j] + self.my[j])/self.gamma) for j in range(self.n)]))
         
+        a = np.min(self.gamma + C + self.my.repeat(self.n).reshape((-1, self.n)))
+        
+        for i in range(self.n):
+            try:
+                self.lambda_[i] = self.gamma * (-a + np.log(1/p[i] * np.sum([xk[i, j] * np.exp(-(self.gamma + C[i, j] + self.my[j] - a)/self.gamma) for j in range(self.n)])))
+            except:
+                self.lambda_[i] = -np.inf
+
+
+            
+        a = np.min(self.gamma + C + self.lambda_.repeat(self.n).reshape((-1, self.n)).T)
+
         for j in range(self.n):
-            self.my[j] = self.gamma * np.log(1/q[j] * np.sum([xk[i, j] * np.exp(-(self.gamma + C[i, j] + self.lambda_[i])/self.gamma) for i in range(self.n)]))
+            try:
+                self.my[j] = self.gamma * (-a + np.log(1/q[j] * np.sum([xk[i, j] * np.exp(-(self.gamma + C[i, j] + self.lambda_[i] - a)/self.gamma) for i in range(self.n)])))
+            except:
+                self.my[j] = -np.inf
     
     def _new_x(self, C, p, q, xk):
         x = np.zeros((self.n, self.n))
         
+        a = np.min(self.gamma + C + self.lambda_.repeat(self.n).reshape((-1, self.n)) + self.my.repeat(self.n).reshape((-1, self.n)).T)
+        
         for i in range(self.n):
             for j in range(self.n):
-                x[i, j] = xk[i, j] * np.exp(-(self.gamma + C[i, j] + self.lambda_[i] + self.my[j])/self.gamma)
+                try:
+                    x[i, j] = xk[i, j] * np.exp(-(self.gamma + C[i, j] + self.lambda_[i] + self.my[j] - a)/self.gamma)
+                except:
+                    x[i, j] = 0
         return x
     
     def _new_phi(self, C, p, q, xk):
         x_sum = 0
         
+        a = np.min(self.gamma + C + self.lambda_.repeat(self.n).reshape((-1, self.n)) + self.my.repeat(self.n).reshape((-1, self.n)).T)
+        
         for i in range(self.n):
             for j in range(self.n):
-                x_sum += xk[i, j] * np.exp(-(C[i,j] + self.lambda_[i] + self.my[j] + self.gamma) / self.gamma)
+                try:
+                    x_sum += xk[i, j] * np.exp(-(C[i,j] + self.lambda_[i] + self.my[j] + self.gamma - a) / self.gamma)
+                except:
+                    x_sum += 0
                 
         return - np.sum(self.lambda_ * p) - np.sum(self.my * q) - self.gamma * x_sum
     
     def _new_f(self, C, x, xk):
-        return np.sum(C * x) + self.gamma * np.sum(x * np.log(x / xk))
+        return np.sum(C * x) + self.gamma * np.sum((x + 1e-16) * np.log((x + 1e-16) / xk))
     
     def fit(self, C, p, q, with_prox=True):
         T = 0
