@@ -65,7 +65,7 @@ class Experiments:
                             iterations[i].append(iterations_num)
                             ph.update(1)
             
-        return epsilons, gammas, np.array(iterations).reshape((len(epsilons), len(methods), len(problems), len(gammas)))
+        return np.array(epsilons), np.array(gammas), np.array(iterations).reshape((len(epsilons), len(methods), len(problems), len(gammas)))
     
     @staticmethod
     def plot_algorithm_comparation(gammas, iterations, epsilon, n, methods_names=[]):
