@@ -50,7 +50,8 @@ class Experiments:
         plt.imshow(x.reshape(int(math.sqrt(n)), int(math.sqrt(n)), n).sum(2))
     
     @staticmethod
-    def test(problems, config={'eps': (0.01, 0.01, 1), 'gamma': (10, 0.01, 2)}, methods=[]):
+    def test(problems, config=None, methods=[]):
+        config = config or {'eps': (0.01, 0.01, 1), 'gamma': (10, 0.01, 2)}
         epsilons = [config['eps'][0] / config['eps'][2]**i for i in range(int(math.log(config['eps'][0] / config['eps'][1], config['eps'][2] + 1e-5)) + 1)]
         gammas = [config['gamma'][0] / config['gamma'][2]**i for i in range(int(math.log(config['gamma'][0] / config['gamma'][1], config['gamma'][2] + 1e-5)) + 1)]
 
@@ -68,15 +69,15 @@ class Experiments:
         return np.array(epsilons), np.array(gammas), np.array(iterations).reshape((len(epsilons), len(methods), len(problems), len(gammas)))
     
     @staticmethod
-    def plot_algorithm_comparation(gammas, iterations, epsilon, n, methods_names=[]):
+    def plot_algorithm_comparation(gammas, iterations, epsilon, n, methods_names=None):
         iters = iterations[0,:,0,:].reshape(1,-1).T
         epss = gammas
-        n_methods = len(methods_names)
+        n_methods = len(methods_names or [])
         
         df = pd.DataFrame()
         df.insert(0, "gamma", epss.tolist() * n_methods)
         df.insert(1, "N", iters)
-        df.insert(0, "methods", list(sum([[name] * len(epss) for i, name in enumerate(methods_names)], [])))
+        df.insert(0, "methods", list(sum([[name] * len(epss) for i, name in enumerate(methods_names or [])], [])))
         
         sns.set(style="ticks")
         lm = sns.lineplot(x="gamma", y="N", hue="methods",
@@ -86,17 +87,17 @@ class Experiments:
                title="$N(\epsilon, \gamma), \epsilon = %.2f$" % (epsilon))
        
     @staticmethod
-    def plot_algorithm_log_comparation(gamma, iterations, epsilons, n, methods_names=[]):
+    def plot_algorithm_log_comparation(gamma, iterations, epsilons, n, methods_names=None):
         iters = np.log(iterations[:,:,0,0].reshape(1,-1).T)
         epss = np.log(1/epsilons)
-        n_methods = len(methods_names)
+        n_methods = len(methods_names or [])
         
         slope = [stats.linregress(epss, iters[len(epss)*i:len(epss)*(i+1)].reshape(len(epss)))[0] for i in range(n_methods)]
         
         df = pd.DataFrame()
         df.insert(0, "log(1/eps)", epss.tolist() * n_methods)
         df.insert(1, "log(N)", iters)
-        df.insert(0, "methods", list(sum([[name + ", $ϰ_%i = %.2f$" % (i+1, slope[i])] * len(epss) for i, name in enumerate(methods_names)], [])))
+        df.insert(0, "methods", list(sum([[name + ", $ϰ_%i = %.2f$" % (i+1, slope[i])] * len(epss) for i, name in enumerate(methods_names or [])], [])))
         
         sns.set(style="ticks")
         lm = sns.lmplot(x="log(1/eps)", y="log(N)", hue="methods",
