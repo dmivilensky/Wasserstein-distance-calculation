@@ -8,7 +8,6 @@ class SinkhornMethod:
         :param dim: transport vector dimension
         :param epsilon: desired accuracy
         """
-        
         # dual func variables for indicator functions
         # self.lambda_ = np.zeros(n)
         self.lambda_ = np.zeros(n)
@@ -59,11 +58,11 @@ class SinkhornMethod:
             while True:
                 self._new_dual_variables(C, p, q, xk)
                 x = self._new_x(C, p, q, xk)
-                t += 1  
+                t += 1
                 T += 1
                 
                 self.phi = self._new_phi(C, p, q, xk)
-                self.f = self._new_f(C, x, xk) 
+                self.f = self._new_f(C, x, xk)
                 c = 1 / (2 * self.n) * (np.sum(self.my) - np.sum(self.lambda_))
                 self.lambda_ += c
                 self.my -= c
