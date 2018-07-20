@@ -31,7 +31,6 @@ class Experiments:
 
         img1 += 1
         img2 += 1
-        
         p = img1.reshape((img1.shape[0] * img1.shape[1], )) / np.sum(img1)
         q = img2.reshape((img2.shape[0] * img2.shape[1], )) / np.sum(img2)
 
@@ -62,8 +61,8 @@ class Experiments:
             for (C, p, q) in problems:
                 for eps in epsilons:
                     for gamma in gammas:
-                        for i in range(len(methods)):
-                            _, iterations_num, _ = methods[i](C, p, q, gamma, eps)
+                        for i, method in enumerate(methods):
+                            _, iterations_num, _ = method(C, p, q, gamma, eps)
                             iterations[i].append(iterations_num)
                             ph.update(1)
             
@@ -83,9 +82,7 @@ class Experiments:
         sns.set(style="ticks")
         lm = sns.lineplot(x="gamma", y="N", hue="methods",
                         data=df)
-        lm.set(ylim=(0, 400), 
-               xlabel='$\gamma$', ylabel='$N(\epsilon, \gamma)$', 
-               title="$N(\epsilon, \gamma), \epsilon = %.2f$" % (epsilon))
+        lm.set(ylim=(0, 400), xlabel='$\gamma$', ylabel='$N(\epsilon, \gamma)$', title="$N(\epsilon, \gamma), \epsilon = %.2f$" % (epsilon))
        
     @staticmethod
     def plot_algorithm_log_comparation(gamma, iterations, epsilons, n, methods_names=None):
@@ -104,9 +101,7 @@ class Experiments:
         lm = sns.lmplot(x="log(1/eps)", y="log(N)", hue="methods",
                         data=df, legend=False,
                         size=8, aspect=(1+np.sqrt(5))/2)
-        lm.set(ylim=(None, 5), 
-               xlabel='$log(1 / \epsilon)$', ylabel='$log\;N(\epsilon, \gamma)$', 
-               title="$log\;N(\epsilon, \gamma), \gamma = %.2f$" % (gamma))
+        lm.set(ylim=(None, 5), xlabel='$log(1 / \epsilon)$', ylabel='$log\;N(\epsilon, \gamma)$', title="$log\;N(\epsilon, \gamma), \gamma = %.2f$" % (gamma))
         lm.ax.legend(bbox_to_anchor=(0.3, 1, 0., .0), loc=0,
                      ncol=1, borderaxespad=0.)
         

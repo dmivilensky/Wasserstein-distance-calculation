@@ -11,7 +11,6 @@ class LinearCouplingMethod:
         self.mu_x_new     = self.mu_u     = np.ones(n)
         self.A = 0
         self.x_sum = 0
-        
         self.x_0 = 1 / n**2
         
         self.nesterovs = nesterovs

@@ -6,7 +6,6 @@ class DualGradientDescent:
         self.epsilon = epsilon
         self.n       = n
         self.small     = 1e-20
-        
         self.lam = np.zeros(n)
         self.mu     = np.zeros(n)
         self.x_sum  = np.zeros([n, n])

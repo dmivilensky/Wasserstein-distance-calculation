@@ -8,7 +8,6 @@ class SinkhornMethod:
         :param dim: transport vector dimension
         :param epsilon: desired accuracy
         """
-        
         # dual func variables for indicator functions
         # self.lambda_ = np.zeros(n)
         self.lambda_ = np.zeros(n)

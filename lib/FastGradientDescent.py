@@ -13,7 +13,6 @@ class FastGradientDescent:
         self.u_lambda = self.u_mu = np.ones([n])
         self.y_lambda = self.y_mu = np.zeros(n)
         self.x_lambda = self.x_mu = np.ones([n])
-        
         self.x_0 = np.ones([n, n]) / (n**2)
 
     
