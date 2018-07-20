@@ -14,3 +14,5 @@ Optimal Transport and Optimization related experiments.
   * seaborn
 
 Special thanks to our supervisors A.V. Gasnikov and D.M. Dvinskykh
+
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/5ae7609e393f47e6876ca43ef4dcf7de)](https://www.codacy.com/app/dmivilensky/Wasserstein-distance-calculation?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=dmivilensky/Wasserstein-distance-calculation&amp;utm_campaign=Badge_Grade)
