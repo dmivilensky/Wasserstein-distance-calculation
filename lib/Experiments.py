@@ -41,7 +41,6 @@ class Experiments:
             plt.subplot(122)
             plt.imshow(img2, cmap='gray')
             plt.show()
-        
         return C, p, q
     
     @staticmethod

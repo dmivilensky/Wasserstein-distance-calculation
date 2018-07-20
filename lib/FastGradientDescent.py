@@ -15,7 +15,6 @@ class FastGradientDescent:
         self.x_lambda = self.x_mu = np.ones([n])
         self.x_0 = np.ones([n, n]) / (n**2)
 
-    
     def x_hat(self, c, lambda_y, mu_y):
         a_min = np.min(self.gamma + c + lambda_y.repeat(self.n).reshape(-1, self.n) + mu_y.repeat(self.n).reshape(-1, self.n).T)
         exp_ = -(self.gamma + c + lambda_y.repeat(self.n).reshape(-1, self.n) + mu_y.repeat(self.n).reshape(-1, self.n).T - a_min) / self.gamma
