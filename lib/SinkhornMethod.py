@@ -41,9 +41,7 @@ class SinkhornMethod:
         return xk * np.exp(-(self.gamma + C + np.tile(self.lambda_, (self.n, 1)).T + np.tile(self.my, (self.n, 1)))/self.gamma)
     
     def _new_phi(self, C, p, q, xk):
-        a_min = np.min(C + np.tile(self.lambda_, (self.n, 1)).T + np.tile(self.my, (self.n, 1)) + self.gamma)
         exp_ = -(C + np.tile(self.lambda_, (self.n, 1)).T + np.tile(self.my, (self.n, 1)) + self.gamma ) / self.gamma
-#         exp_[exp_ < -100] = -100
         return - np.sum(self.lambda_ * p) - np.sum(self.my * q) - self.gamma * np.sum(xk * np.exp(exp_))
     
     def _new_f(self, C, x, xk):
@@ -61,13 +59,11 @@ class SinkhornMethod:
             while True:
                 self._new_dual_variables(C, p, q, xk)
                 x = self._new_x(C, p, q, xk)
-                     
                 t += 1  
                 T += 1
                 
                 self.phi = self._new_phi(C, p, q, xk)
                 self.f = self._new_f(C, x, xk) 
-                    
                 c = 1 / (2 * self.n) * (np.sum(self.my) - np.sum(self.lambda_))
                 self.lambda_ += c
                 self.my -= c

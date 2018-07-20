@@ -10,7 +10,6 @@ class FastGradientDescent:
         self.l = 1 / gamma
 
         self.a = self.alpha = 0
-        
         self.u_lambda = self.u_mu = np.ones([n])
         self.y_lambda = self.y_mu = np.zeros(n)
         self.x_lambda = self.x_mu = np.ones([n])
@@ -66,7 +65,8 @@ class FastGradientDescent:
                     exp_
                 )).sum())
     
-    def deviation_p_q(self, x, p, q):
+    @staticmethod
+    def deviation_p_q(x, p, q):
         return np.sqrt(np.sum((x.sum(1) - p)**2) + np.sum((x.sum(0) - q)**2))
     
     def fit(self, c, p, q):
@@ -92,11 +92,11 @@ class FastGradientDescent:
             r = np.sqrt((self.x_lambda**2).sum() + (self.x_mu**2).sum())
             epsilon_wave = self.epsilon / r
             
-            criteria_a = self.deviation_p_q(x_wave, p, q) <= epsilon_wave
+            criteria_a = FastGradientDescent.deviation_p_q(x_wave, p, q) <= epsilon_wave
             criteria_b = self.f(c, x_wave) - self.phi(c, p, q, self.x_lambda, self.x_mu) <= self.epsilon
             
             if k % 1000 == 0:
-                print(f'iteration {k}:   criteria 1 = {round(self.deviation_p_q(x_wave, p, q), 7)}, ' + \
+                print(f'iteration {k}:   criteria 1 = {round(FastGradientDescent.deviation_p_q(x_wave, p, q), 7)}, ' + \
                                        f'criteria 2 = {round(self.f(c, x_wave) - self.phi(c, p, q, self.x_lambda, self.x_mu), 7)}')
     
             if criteria_a and criteria_b:

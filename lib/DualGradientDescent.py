@@ -38,7 +38,8 @@ class DualGradientDescent:
     def _new_x_wave(self, k):
         return self.x_sum * 1/k
     
-    def deviation_p_q(self, x, p, q):
+    @staticmethod
+    def deviation_p_q(x, p, q):
         return np.sqrt(np.sum((x.sum(1) - p)**2) + np.sum((x.sum(0) - q)**2))
     
     def fit(self, c, p, q):
@@ -52,11 +53,11 @@ class DualGradientDescent:
             R = np.sqrt(np.linalg.norm(self.lam) + np.linalg.norm(self.mu))
             epsilon_wave = self.epsilon / R
             
-            criteria_a = self.deviation_p_q(self.x_wave, self.p, self.q) < epsilon_wave
+            criteria_a = DualGradientDescent.deviation_p_q(self.x_wave, self.p, self.q) < epsilon_wave
             criteria_b = self.f(self.x_wave) + self.phi(self.lam, self.mu, self.n) < self.epsilon
             
             if k % 5000 == 0:
-                print(f'iteration {k}:   criteria 1 = {round(self.deviation_p_q(self.x_wave, self.p, self.q), 7)}, ' + \
+                print(f'iteration {k}:   criteria 1 = {round(DualGradientDescent.deviation_p_q(self.x_wave, self.p, self.q), 7)}, ' + \
                                        f'criteria 2 = {round(self.f(self.x_wave) + self.phi(self.lam, self.mu, self.n), 7)}')
             
             if criteria_a and criteria_b:

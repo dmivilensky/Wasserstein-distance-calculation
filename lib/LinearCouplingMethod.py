@@ -7,7 +7,6 @@ class LinearCouplingMethod:
         self.epsilon = epsilon
         self.n = n
         self.inf = 1e+6
-        
         self.lambda_x_new = self.lambda_u = np.ones(n)
         self.mu_x_new     = self.mu_u     = np.ones(n)
         self.A = 0
@@ -38,7 +37,8 @@ class LinearCouplingMethod:
                     exp_
                 )).sum())
         
-    def argmin(self, func, epsilon, var_range):
+    @staticmethod
+    def argmin(func, epsilon, var_range):
         def find_upper_bound(cap):
                 l, r = 0, 2**(-2)
                 while func(l) >= func(r) and r <= 1:
@@ -75,7 +75,7 @@ class LinearCouplingMethod:
     def _new_beta(self, k=None):
         if k is not None:
             return k / (k + 2)
-        return self.argmin(lambda beta: self.phi(
+        return LinearCouplingMethod.argmin(lambda beta: self.phi(
             self.lambda_u + beta * (self.lambda_x - self.lambda_u),
             self.mu_u     + beta * (self.mu_x     - self.mu_u)
         ), 1e-4, [0, 1])
@@ -86,14 +86,13 @@ class LinearCouplingMethod:
         
     def grad_phi(self, lambda_y, mu_y):
         return np.array([
-            self.p - self.x_hat(lambda_y, mu_y).sum(1), 
-            self.q - self.x_hat(lambda_y, mu_y).sum(0)
+            self.p - self.x_hat(lambda_y, mu_y).sum(1), self.q - self.x_hat(lambda_y, mu_y).sum(0)
         ])
     
     def _new_h(self, L=None):
         if L is not None:
             return 1 / L
-        return self.argmin(lambda h: self.phi(
+        return LinearCouplingMethod.argmin(lambda h: self.phi(
             self.lambda_x - h * self.grad_phi(self.lambda_y, self.mu_y)[0],
             self.mu_x     - h * self.grad_phi(self.lambda_y, self.mu_y)[1]
         ), 1e-4, [0, self.inf])
