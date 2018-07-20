@@ -69,12 +69,12 @@ class Experiments:
     
     @staticmethod
     def plot_algorithm_comparation(gammas, iterations, epsilon, n, methods_names=[]):
-        iters = iterations[0,:,0,:].reshape(1,-1).T[:15]
+        iters = iterations[0,:,0,:].reshape(1,-1).T
         epss = gammas
         n_methods = len(methods_names)
         
         df = pd.DataFrame()
-        df.insert(0, "gamma", epss.tolist() * 3)
+        df.insert(0, "gamma", epss.tolist() * n_methods)
         df.insert(1, "N", iters)
         df.insert(0, "methods", list(sum([[name] * len(epss) for i, name in enumerate(methods_names)], [])))
         
