@@ -81,7 +81,8 @@ class Experiments:
         sns.set(style="ticks")
         lm = sns.lineplot(x="gamma", y="N", hue="methods",
                         data=df)
-        lm.set(ylim=(0, 400), xlabel='$\gamma$', ylabel='$N(\epsilon, \gamma)$', title="$N(\epsilon, \gamma), \epsilon = %.2f$" % (epsilon))
+        lm.set(xlabel='$\gamma$', ylabel='$N(\epsilon, \gamma)$',
+               title="$N(\epsilon, \gamma), \epsilon = %.2f$" % (epsilon))
        
     @staticmethod
     def plot_algorithm_log_comparation(gamma, iterations, epsilons, n, methods_names=None):
@@ -99,8 +100,9 @@ class Experiments:
         sns.set(style="ticks")
         lm = sns.lmplot(x="log(1/eps)", y="log(N)", hue="methods",
                         data=df, legend=False,
-                        size=8, aspect=(1+np.sqrt(5))/2)
-        lm.set(ylim=(None, 5), xlabel='$log(1 / \epsilon)$', ylabel='$log\;N(\epsilon, \gamma)$', title="$log\;N(\epsilon, \gamma), \gamma = %.2f$" % (gamma))
+                        height=8, aspect=(1+np.sqrt(5))/2)
+        lm.set(xlabel='$log(1 / \epsilon)$', ylabel='$log\;N(\epsilon, \gamma)$',
+               title="$log\;N(\epsilon, \gamma), \gamma = %.2f$" % (gamma))
         lm.ax.legend(bbox_to_anchor=(0.3, 1, 0., .0), loc=0,
                      ncol=1, borderaxespad=0.)
         
