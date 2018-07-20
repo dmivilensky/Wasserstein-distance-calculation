@@ -10,7 +10,7 @@ class DualGradientDescent:
         self.mu     = np.zeros(n)
         self.x_sum  = np.zeros([n, n])
         self.x_0    = np.ones([n, n]) / (n**2)
-    
+
     def f(self, x):
         return (self.c * x).sum() + self.gamma * ((x + self.small) * np.log((x + self.small) / self.x_0)).sum()
     
