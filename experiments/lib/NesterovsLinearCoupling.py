@@ -1,7 +1,7 @@
 import numpy as np
 
 class NesterovsLinearCoupling:
-    def __init__(self, gamma, epsilon, n, log=False):
+    def __init__(self, gamma, epsilon, n, nesterovs=True, log=False):
         self.gamma = gamma
         self.epsilon = epsilon
         self.n = n
@@ -14,6 +14,7 @@ class NesterovsLinearCoupling:
         
         self.x_0 = 1 / n**2
         
+        self.nesterovs = nesterovs
         self.log = log
         if self.log:
             print("–––––––––––––––––––––––––––––")
@@ -23,13 +24,16 @@ class NesterovsLinearCoupling:
             print("–––––––––––––––––––––––––––––\n")
     
     def f(self, x):
-        return (self.c * x).sum() + self.gamma * (x * np.log(x / self.x_0)).sum()
+        return (self.c * x).sum() + self.gamma * ((x + 1e-16) * np.log((x + 1e-16) / self.x_0)).sum()
     
     def phi(self, lambda_x, mu_x):
+        a = np.min(self.gamma + self.c + lambda_x.repeat(self.n).reshape(-1, self.n) + mu_x.repeat(self.n).reshape(-1, self.n).T)
+        l = -((self.gamma + self.c + lambda_x.repeat(self.n).reshape(-1, self.n) + mu_x.repeat(self.n).reshape(-1, self.n).T) - a) / self.gamma
+        l[l < -100] = float("-inf")
         return (lambda_x * self.p).sum() + (mu_x * self.q).sum() + \
-                self.gamma * np.log(1/np.e * (self.x_0 * np.exp(
-                    -(self.gamma + self.c + lambda_x.repeat(self.n).reshape(-1, self.n) + mu_x.repeat(self.n).reshape(-1, self.n).T) / self.gamma
-                )).sum())
+                self.gamma * (-a + np.log(1/np.e * (self.x_0 * np.exp(
+                    l
+                )).sum()))
         
     def argmin(self, func, epsilon, var_range):
         def find_upper_bound(cap):
@@ -53,8 +57,11 @@ class NesterovsLinearCoupling:
         return r
     
     def x_hat(self, lambda_x, mu_x):
+        a = np.min(self.gamma + self.c + lambda_x.repeat(self.n).reshape(-1, self.n) + mu_x.repeat(self.n).reshape(-1, self.n).T)
+        l = -(self.gamma + self.c + lambda_x.repeat(self.n).reshape(-1, self.n) + mu_x.repeat(self.n).reshape(-1, self.n).T - a) / self.gamma
+        l[l < -100] = float("-inf")
         x_hat = self.x_0 * np.exp(
-            -(self.gamma + self.c + lambda_x.repeat(self.n).reshape(-1, self.n) + mu_x.repeat(self.n).reshape(-1, self.n).T) / self.gamma
+            l
         )
         return x_hat / x_hat.sum()
     
@@ -104,7 +111,7 @@ class NesterovsLinearCoupling:
         if k is not None and L is not None:
             return (k + 2) / (2 * L)
         delta_phi = self.phi(self.lambda_y, self.mu_y) - self.phi(self.lambda_x, self.mu_x)
-        D = delta_phi * (delta_phi - 2 * self.A * self.deviation_p_q(self.x_hat(self.lambda_y, self.mu_y))**2)
+        D = max(delta_phi * (delta_phi - 2 * self.A * self.deviation_p_q(self.x_hat(self.lambda_y, self.mu_y))**2), 0)
         return (-delta_phi + np.sqrt(D)) / self.deviation_p_q(self.x_hat(self.lambda_y, self.mu_y))**2
     
     def _new_u(self):
@@ -118,7 +125,7 @@ class NesterovsLinearCoupling:
         self.x_sum += self.alpha * self.x_hat(self.lambda_y, self.mu_y)
         
     def x_wave_(self):
-        return self.x_sum * 1/self.A
+        return self.x_sum * 1/(self.A + 1e-16)
     
     def fit(self, c, p, q):
         self.c, self.p, self.q = c, p, q
@@ -127,27 +134,35 @@ class NesterovsLinearCoupling:
         while True:
             self.x_update()
             
-            # self.beta = self._new_beta(k = k)
-            self.beta = self._new_beta()
+            if self.nesterovs:
+                self.beta = self._new_beta()
+            else:
+                self.beta = self._new_beta(k = k)
             self.lambda_y, self.mu_y = self._new_y()
             
-            # self.h = self._new_h(L = 1/self.gamma)
-            self.h = self._new_h()
+            if self.nesterovs:
+                self.h = self._new_h()
+            else:
+                self.h = self._new_h(L = 1/self.gamma)
             self.lambda_x_new, self.mu_x_new = self._new_x()
             self.correct_lambda_mu()
             
-            # self.alpha = self._new_alpha(k = k, L = 1/self.gamma)
-            self.alpha = self._new_alpha()
+            if self.nesterovs:
+                self.alpha = self._new_alpha()
+            else:
+                self.alpha = self._new_alpha(k = k, L = 1/self.gamma)
             self.x_sum_update()
             self.lambda_u, self.mu_u = self._new_u()
             
             self.A = self._new_A()
             self.x_wave = self.x_wave_()
+            x_hat = self.x_hat(self.lambda_x, self.mu_x)
             
             R = np.sqrt(np.linalg.norm(self.lambda_x) + np.linalg.norm(self.mu_x))
             epsilon_wave = self.epsilon / R
             
-            criteria_a = self.deviation_p_q(self.x_wave) < epsilon_wave
+            # criteria_a = self.deviation_p_q(self.x_wave) < epsilon_wave
+            criteria_a = self.deviation_p_q(x_hat) < epsilon_wave
             criteria_b = self.f(self.x_wave) + self.phi(self.lambda_x_new, self.mu_x_new) < self.epsilon
             
             if self.log and k % 25 == 0:
