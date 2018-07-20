@@ -10,9 +10,10 @@ class DualGradientDescent:
         self.mu     = np.zeros(n)
         self.x_sum  = 0
         self.x_0    = np.ones([n, n]) / (n**2)
+        self.small     = 1e-20
     
     def f(self, x):
-        return (self.c * x).sum() + self.gamma * (x * np.log(x / self.x_0)).sum()
+        return (self.c * x).sum() + self.gamma * ((x + self.small) * np.log((x + self.small) / self.x_0)).sum()
     
     def phi(self, lam, mu, n):
         return (lam * self.p).sum() + (mu * self.q).sum() + \
