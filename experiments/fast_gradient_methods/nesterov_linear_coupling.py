@@ -10,10 +10,10 @@ Original file is located at
 import numpy as np
 import copy
 
-def f(x):
+def task(x):
     return sum([(i + 1) * (x[i] ** 2) for i in range(len(x))])
 
-def f_grad(x):
+def task_gradient(x):
     return np.array([(i + 1) * x[i] * 2 for i in range(len(x))])
 
 def find_r(y):
@@ -23,7 +23,7 @@ def find_r(y):
     while 1:
         x = j
         j *= 2
-        if f(y - px * f_grad(y)) <= f(y - x * f_grad(y)):
+        if task(y - px * task_gradient(y)) <= task(y - x * task_gradient(y)):
             break
         px = x
     return x
@@ -32,7 +32,7 @@ def ternary_search_beta(eps, l, r, u, x):
     while(r - l > eps):
         m1 = l + (r - l) / 3
         m2 = r - (r - l) / 3
-        if(f(u + m1 * (x - u)) < f(u + m2 * (x - u))):
+        if(task(u + m1 * (x - u)) < task(u + m2 * (x - u))):
             r = m2
         else:
             l = m1
@@ -41,7 +41,7 @@ def ternary_search_h(eps, l, r, y):
     while(r - l > eps):
         m1 = l + (r - l) / 3
         m2 = r - (r - l) / 3
-        if(f(y - m1 * f_grad(y)) < f(y - m2 * f_grad(y))):
+        if(task(y - m1 * task_gradient(y)) < task(y - m2 * task_gradient(y))):
             r = m2
         else:
             l = m1
@@ -63,12 +63,12 @@ def linear_coupling(x, eps):
       ycur = uprev + bcur * (xprev - uprev)
       r = find_r(ycur)
       hcur = ternary_search_h(eps, 0, r, ycur)
-      xcur = ycur - hcur * f_grad(ycur)
+      xcur = ycur - hcur * task_gradient(ycur)
       Acur += alphprev
-      alphcur = ((f(ycur) - f(xcur)) + np.sqrt((f(ycur) - f(xcur)) * ((f(ycur) - f(xcur)) + 2 * Acur * np.linalg.norm(f_grad(ycur)) ** 2)) )/ (np.linalg.norm(f_grad(ycur)) ** 2)
-      ucur = uprev - alphcur * f_grad(ycur)
+      alphcur = ((task(ycur) - task(xcur)) + np.sqrt((task(ycur) - task(xcur)) * ((task(ycur) - task(xcur)) + 2 * Acur * np.linalg.norm(task_gradient(ycur)) ** 2)) )/ (np.linalg.norm(task_gradient(ycur)) ** 2)
+      ucur = uprev - alphcur * task_gradient(ycur)
       # Here break criteria
-      if(f(xprev) - f(xres) <= eps):
+      if(task(xprev) - task(xres) <= eps):
         break
       xprev = xcur
       uprev = ucur
@@ -76,5 +76,6 @@ def linear_coupling(x, eps):
       k += 1
   return xprev, k
 
-print(linear_coupling(np.array(range(100)), 0.001))
+x = np.array([i for i in range(100, 0, -1)])
+print(linear_coupling(x, 0.001))
 
