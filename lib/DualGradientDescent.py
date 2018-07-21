@@ -15,8 +15,8 @@ class DualGradientDescent:
         return (self.c * x).sum() + self.gamma * ((x + self.small) * np.log((x + self.small) / self.x_0)).sum()
 
     def phi(self, lam, mu, n):
-        return (lam * self.p).sum() + (mu * self.q).sum() + \
-                self.gamma * np.log(1/np.e * (self.x_0 * np.exp(
+        return (lam * self.p).sum() + (mu * self.q).sum() + self.gamma \
+                self.gamma * np.log((self.x_0 * np.exp(
                     -(self.gamma + self.c + lam.repeat(n).reshape(-1, n) + mu.repeat(n).reshape(-1, n).T) / self.gamma
                 )).sum())
 

@@ -58,8 +58,8 @@ class FastGradientDescent:
         a_min = np.min(self.gamma + c + lambda_x.repeat(self.n).reshape(-1, self.n) + mu_x.repeat(self.n).reshape(-1, self.n).T)
         exp_ = -(self.gamma + c + lambda_x.repeat(self.n).reshape(-1, self.n) + mu_x.repeat(self.n).reshape(-1, self.n).T - a_min) / self.gamma
         exp_[exp_ < -100] = -100
-        return -(lambda_x * p).sum() - (mu_x * q).sum() - \
-                self.gamma * np.log(1/np.e * (self.x_0 * np.exp(
+        return -(lambda_x * p).sum() - (mu_x * q).sum() - self.gamma\
+                self.gamma * np.log((self.x_0 * np.exp(
                     exp_
                 )).sum())
     
